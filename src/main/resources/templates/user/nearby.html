@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buses Near Me – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/user/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link" href="/user/search"><i class="bi bi-search"></i> Search Buses</a>
+                <a class="nav-link active" href="/user/nearby"><i class="bi bi-geo-alt"></i> Buses Near Me</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="card p-3 shadow-sm border-0 mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-danger"></i> Nearby Bus Stops & Available Buses</h4>
+                    <p class="text-muted small mb-0">Use your device GPS or click anywhere on the map to find nearest bus stops and walking estimates.</p>
+                </div>
+                <button class="btn btn-primary fw-bold" onclick="detectUserLocation()"><i class="bi bi-crosshair"></i> Use My Exact Location</button>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Map Column -->
+            <div class="col-lg-7">
+                <div class="card p-2 shadow-sm border-0">
+                    <div id="map" style="height: 540px;"></div>
+                    <small class="text-muted p-2"><i class="bi bi-info-circle"></i> Tip: Click on any point on the map to find bus stops nearby that spot.</small>
+                </div>
+            </div>
+
+            <!-- Nearby Stops List Column -->
+            <div class="col-lg-5">
+                <div class="card p-3 shadow-sm border-0 h-100">
+                    <h5 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                        <span>Nearest Bus Stops</span>
+                        <span id="stops-found-badge" class="badge bg-secondary">Finding stops...</span>
+                    </h5>
+                    <div id="nearby-list" style="max-height: 480px; overflow-y: auto;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3 overflow-hidden nearby-assistant-card">
+            <div class="p-3 p-lg-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="assistant-icon"><i class="bi bi-stars"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Need help planning your trip?</h5>
+                        <p class="text-muted small mb-0">Open the <strong>Ask Neuronex</strong> chat button in the corner to ask about nearby routes, destinations, and bus services from any page.</p>
+                    </div>
+                </div>
+                <div class="border-top mt-3 pt-3">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-headset text-primary me-1"></i> Chat with BCU / Admin</h6>
+                    <p class="small text-muted mb-2">For road blocks, service disruptions or other trip issues, message the support team.</p>
+                    <div th:if="${isPassenger}">
+                        <input id="support-chat-csrf" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div id="support-chat-messages" class="support-chat-feed" role="log" aria-live="polite">
+                            <div class="assistant-empty">Your conversation with BCU/Admin will appear here.</div>
+                        </div>
+                        <form id="support-chat-form" class="row g-2 mt-1">
+                            <div class="col">
+                                <label for="support-chat-input" class="visually-hidden">Message BCU or Admin</label>
+                                <input id="support-chat-input" class="form-control" maxlength="1000" placeholder="Write a message to BCU/Admin…" autocomplete="off" required>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-outline-primary" type="submit"><i class="bi bi-send"></i> Send</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:unless="${isPassenger}" class="alert alert-light border mt-2 mb-0">
+                        <a href="/login">Sign in as a passenger</a> to start a private chat with BCU/Admin.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/nearby-assistant.js"></script>
+    <script>
+        let nearbyMap;
+        let userPin;
+        let stopCircles = [];
+        let nearbyStops = [];
+        let currentLocation = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            nearbyMap = L.map('map').setView([11.0168, 76.9558], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(nearbyMap);
+
+            // Handle user map click
+            nearbyMap.on('click', e => {
+                fetchNearby(e.latlng.lat, e.latlng.lng, 'Clicked Map Location');
+            });
+
+            // Initial fetch centered on Gandhipuram
+            detectUserLocation();
+        });
+
+        function detectUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => fetchNearby(pos.coords.latitude, pos.coords.longitude, 'Your Current Location'),
+                    () => fetchNearby(11.0168, 76.9558, 'Default Location (Gandhipuram)')
+                );
+            } else {
+                fetchNearby(11.0168, 76.9558, 'Default Location (Gandhipuram)');
+            }
+        }
+
+        function fetchNearby(lat, lon, label) {
+            currentLocation = { lat, lon };
+            window.nearbyCurrentLocation = currentLocation;
+            if (userPin) nearbyMap.removeLayer(userPin);
+            userPin = L.marker([lat, lon]).addTo(nearbyMap).bindPopup(`<strong>${escapeHtml(label)}</strong>`).openPopup();
+            nearbyMap.panTo([lat, lon]);
+
+            const listEl = document.getElementById('nearby-list');
+            listEl.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div> Calculating distances...</div>';
+
+                fetch(`/api/buses/nearby?lat=${lat}&lon=${lon}&radiusKm=10.0`)
+                .then(r => r.json())
+                .then(stops => {
+                    nearbyStops = stops;
+                    document.getElementById('stops-found-badge').innerText = `${stops.length} stops found`;
+                    listEl.innerHTML = '';
+
+                    // Clear previous circles
+                    stopCircles.forEach(c => nearbyMap.removeLayer(c));
+                    stopCircles = [];
+
+                    if (stops.length === 0) {
+                        listEl.innerHTML = '<div class="text-center text-muted py-4">No stops found within 10 km.</div>';
+                        return;
+                    }
+
+                    stops.forEach(st => {
+                        // Plot on map
+                        const circle = L.circleMarker([st.latitude, st.longitude], {
+                            radius: 8,
+                            fillColor: '#0d6efd',
+                            color: '#fff',
+                            weight: 2,
+                            fillOpacity: 0.9
+                        }).addTo(nearbyMap);
+
+                        const availableBuses = Array.isArray(st.availableBuses) ? st.availableBuses : [];
+                        circle.bindPopup(`<strong>${escapeHtml(st.stopName)}</strong><br>${escapeHtml(st.distanceDisplay)} away (~${escapeHtml(st.walkingMinutes)} mins walk)<br>Buses: <b>${escapeHtml(availableBuses.join(', ') || 'Local')}</b>`);
+                        stopCircles.push(circle);
+
+                        // Card in list
+                        const card = document.createElement('div');
+                        card.className = 'card p-2 mb-2 border-0 bg-light';
+                        card.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-0">${escapeHtml(st.stopName)}</h6>
+                                    <small class="text-muted"><i class="bi bi-pin-map"></i> ${escapeHtml(st.landmark || 'Bus shelter')}</small>
+                                </div>
+                                <span class="badge bg-primary fs-6">${escapeHtml(st.distanceDisplay)}</span>
+                            </div>
+                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                <small class="text-secondary"><i class="bi bi-person-walking"></i> ~${escapeHtml(st.walkingMinutes)} mins walk</small>
+                                <div>
+                                    ${availableBuses.map(bus => `<span class="badge bg-success me-1">${escapeHtml(bus)}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <a href="/user/search?from=${encodeURIComponent(String(st.stopName || ''))}" class="btn btn-sm btn-outline-primary py-0">View Buses &rarr;</a>
+                            </div>
+                        `;
+                        listEl.appendChild(card);
+                    });
+                });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+    </script>
+    <style>
+        .nearby-assistant-card { background: linear-gradient(135deg, #f7fbff 0%, #ffffff 60%, #eef8f4 100%); }
+        .assistant-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 12px; color: #fff; background: linear-gradient(135deg, #0d6efd, #16a085); font-size: 1.25rem; }
+        .support-chat-feed { display: flex; flex-direction: column; gap: .65rem; max-height: 250px; min-height: 90px; overflow-y: auto; padding: .85rem; border: 1px solid #e5eaf0; border-radius: 12px; background: rgba(255,255,255,.8); }
+        .assistant-empty { border: 1px solid #e5eaf0; border-radius: 10px; padding: .75rem; color: #6c757d; background: #fff; }
+        .support-chat-message { max-width: 90%; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: 12px; padding: .6rem .8rem; background: #f1f3f5; }
+        .support-chat-message.staff { align-self: flex-end; color: #fff; background: #0d6efd; }
+    </style>
+</body>
+</html>

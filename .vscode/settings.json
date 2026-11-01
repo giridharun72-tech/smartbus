@@ -1,0 +1,13 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-25",
+            "path": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2",
+            "default": true
+        }
+    ],
+    "maven.executable.path": "C:\\Users\\Giridharun S\\.tools\\apache-maven-3.9.10\\bin\\mvn.cmd",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx8G -Xms100m -Xlog:disable"
+}

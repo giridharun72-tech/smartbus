@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger Support Chat – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? '/admin/dashboard' : '/bcu/dashboard'">
+                <i class="bi bi-headset text-info me-2"></i>SmartBus Passenger Support
+            </a>
+            <a class="btn btn-outline-light btn-sm" th:href="${#authorization.expression('hasRole(''ADMIN'')')} ? '/admin/dashboard' : '/bcu/dashboard'">
+                <i class="bi bi-arrow-left me-1"></i>Back to dashboard
+            </a>
+        </div>
+    </nav>
+
+    <main class="container-fluid px-lg-4 py-4">
+        <div class="row g-3">
+            <aside class="col-lg-4 col-xl-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">Passenger conversations</h5>
+                        <small class="text-muted">Private messages visible to authorized staff only.</small>
+                    </div>
+                    <div id="staff-conversation-list" class="list-group list-group-flush staff-conversations">
+                        <div class="p-3 text-muted">Loading conversations…</div>
+                    </div>
+                </div>
+            </aside>
+            <section class="col-lg-8 col-xl-9">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                        <div>
+                            <h5 id="staff-chat-title" class="mb-1 fw-bold">Select a conversation</h5>
+                            <div id="staff-chat-passenger" class="small text-muted">Passenger details will appear here.</div>
+                        </div>
+                        <span id="staff-chat-status" class="small text-muted" role="status"></span>
+                    </div>
+                    <div id="staff-chat-messages" class="staff-chat-messages" role="log" aria-live="polite">
+                        <div class="text-center text-muted py-5">Choose a passenger conversation from the inbox.</div>
+                    </div>
+                    <form id="staff-chat-form" class="card-footer bg-white d-flex gap-2">
+                        <input id="staff-chat-csrf" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <label for="staff-chat-input" class="visually-hidden">Reply to passenger</label>
+                        <input id="staff-chat-input" class="form-control" maxlength="1000" placeholder="Select a conversation to reply…" autocomplete="off" disabled required>
+                        <button id="staff-chat-send" class="btn btn-primary text-nowrap" type="submit" disabled><i class="bi bi-send me-1"></i>Reply</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script src="/js/main.js"></script>
+    <script src="/js/staff-support-chat.js"></script>
+    <script src="/js/site-chatbot.js"></script>
+    <style>
+        .staff-conversations { max-height: calc(100vh - 190px); overflow-y: auto; }
+        .staff-conversation { cursor: pointer; }
+        .staff-conversation.active { background: #eaf2ff; }
+        .staff-chat-messages { display: flex; flex-direction: column; gap: .75rem; min-height: 360px; max-height: calc(100vh - 270px); overflow-y: auto; padding: 1rem; }
+        .staff-message { max-width: min(80%, 700px); padding: .7rem .9rem; border-radius: 12px; background: #f1f3f5; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .staff-message.outgoing { align-self: flex-end; color: #fff; background: #0d6efd; }
+        @media (max-width: 991.98px) { .staff-conversations { max-height: 250px; } .staff-chat-messages { min-height: 280px; max-height: 50vh; } }
+    </style>
+</body>
+</html>

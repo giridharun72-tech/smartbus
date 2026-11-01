@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus &amp; Driver Setup – SmartBus BCU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-white">
+    <nav class="navbar navbar-dark bg-black shadow-sm border-bottom border-secondary">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="/bcu/dashboard"><i class="bi bi-cpu-fill text-info"></i> BCU Operations Center</a>
+            <div class="d-flex align-items-center gap-3">
+                <a class="btn btn-sm btn-outline-light" href="/bcu/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <form action="/logout" method="post" class="m-0">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        <h2 class="fw-bold text-info mb-1">Create Bus &amp; Driver Login</h2>
+        <p class="text-light opacity-75">Each new bus is assigned a unique Bus ID and its driver account is linked immediately.</p>
+
+        <div id="form-message" class="alert d-none" role="status" aria-live="polite"></div>
+        <div class="card bg-secondary border-0 p-4 mb-4">
+            <form id="create-bus-driver-form">
+                <h5 class="fw-bold text-warning mb-3">Bus details</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="busNumber" class="form-label">Bus number / name</label>
+                        <input id="busNumber" name="busNumber" class="form-control" maxlength="30" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="registrationNumber" class="form-label">Vehicle registration plate</label>
+                        <input id="registrationNumber" name="registrationNumber" class="form-control text-uppercase" placeholder="TN 37 N 1234" pattern="TN[- ]?[0-9]{1,2}[- ]?[A-Za-z]{1,3}[- ]?[0-9]{1,4}" maxlength="20" required>
+                        <div class="form-text text-light">Must be a Tamil Nadu plate beginning with TN.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="route" class="form-label">Route</label>
+                        <input id="route" name="route" class="form-control" maxlength="100" placeholder="Gandhipuram - Ukkadam" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="totalSeats" class="form-label">Seat capacity</label>
+                        <input id="totalSeats" name="totalSeats" type="number" class="form-control" min="1" max="200" value="40" required>
+                    </div>
+                </div>
+                <div id="new-route-stops-section" class="mt-3 d-none">
+                    <label class="form-label fw-semibold">New route stops and GPS coordinates</label>
+                    <p class="form-text text-light">Add every stop in travel order. Latitude must be -90 to 90; longitude must be -180 to 180.</p>
+                    <div id="new-route-stops" class="vstack gap-2"></div>
+                    <button id="add-new-route-stop" type="button" class="btn btn-sm btn-outline-light mt-2">
+                        <i class="bi bi-plus-circle"></i> Add stop
+                    </button>
+                </div>
+
+                <hr class="border-light my-4">
+                <h5 class="fw-bold text-warning mb-3">Driver details &amp; login</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="driverId" class="form-label">Driver ID (login ID)</label>
+                        <input id="driverId" name="driverId" class="form-control" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" autocomplete="off" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="password" class="form-label">Login password</label>
+                        <input id="password" name="password" type="password" class="form-control" minlength="12" maxlength="72" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,72}" autocomplete="new-password" required>
+                        <div class="form-text text-light">At least 12 characters with uppercase, lowercase, a number, and a symbol.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="driverName" class="form-label">Driver full name</label>
+                        <input id="driverName" name="driverName" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="phone" class="form-label">Phone number</label>
+                        <input id="phone" name="phone" type="tel" class="form-control" pattern="[+0-9() -]{8,20}" maxlength="20" autocomplete="off" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="aadhaarNumber" class="form-label">Aadhaar number</label>
+                        <input id="aadhaarNumber" name="aadhaarNumber" type="password" class="form-control" inputmode="numeric" pattern="[0-9]{12}" minlength="12" maxlength="12" autocomplete="off" required>
+                        <div class="form-text text-light">Only last four digits are retained; the full number is never displayed or stored.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="licenseNumber" class="form-label">Driving licence number</label>
+                        <input id="licenseNumber" name="licenseNumber" class="form-control" maxlength="50" autocomplete="off" required>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                    <span class="small text-light opacity-75">Driver signs in at <a class="link-info" href="/driver/login">Driver Login</a> using this ID and password.</span>
+                    <button id="createBusButton" type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-circle"></i> Create Bus &amp; Driver</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card bg-secondary border-0 p-3">
+            <h5 class="fw-bold mb-3">Registered fleet</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead><tr><th>Bus ID</th><th>Bus number</th><th>Registration</th><th>Route</th><th>Driver ID</th><th>Driver</th><th></th></tr></thead>
+                    <tbody>
+                        <tr th:each="bus : ${buses}">
+                            <td th:text="${bus.id}">1</td>
+                            <td th:text="${bus.busNumber}">21A</td>
+                            <td th:text="${bus.registrationNumber}">TN-37-N-1234</td>
+                            <td th:text="${bus.route != null ? bus.route.name : 'Unassigned'}">Route 5</td>
+                            <td th:text="${bus.driver != null ? bus.driver.driverCode : 'Unassigned'}">DRV-101</td>
+                            <td th:text="${bus.driver != null ? bus.driver.fullName : (bus.assignedDriverName != null ? bus.assignedDriverName : 'Unassigned')}">Driver</td>
+                            <td>
+                                <button th:if="${bus.driver != null}" type="button" class="btn btn-sm btn-outline-info edit-bus"
+                                        th:attr="data-bus-id=${bus.id},data-bus-number=${bus.busNumber},data-registration=${bus.registrationNumber},data-route-id=${bus.route != null ? bus.route.id : 0},data-seats=${bus.capacity},data-driver-name=${bus.driver != null ? bus.driver.fullName : ''},data-driver-phone=${bus.driver != null ? bus.driver.phone : ''},data-license=${bus.driver != null ? bus.driver.licenseNumber : ''}">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </button>
+                                <span th:if="${bus.driver == null}" class="text-light opacity-75 small">No driver assigned</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(buses)}"><td colspan="7" class="text-center text-light opacity-75">No buses have been registered yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card bg-secondary border-0 p-4 mt-4">
+            <h4 class="fw-bold text-warning mb-1">One-day route diversion / breakdown replacement</h4>
+            <p class="text-light opacity-75">Set the detour stops and exact coordinates for one service date. Affected route buses and subscribed passengers receive the update live.</p>
+            <div id="change-message" class="alert d-none" role="status" aria-live="polite"></div>
+            <form id="route-change-form">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="change-route" class="form-label">Route</label>
+                        <select id="change-route" class="form-select" required>
+                            <option value="">Select a route</option>
+                            <option th:each="route : ${routes}" th:value="${route.id}" th:text="${route.name}">Route</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="change-date" class="form-label">Service date</label>
+                        <input id="change-date" type="date" class="form-control" th:value="${today}" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="change-reason" class="form-label">Reason / passenger notice</label>
+                        <input id="change-reason" class="form-control" maxlength="250" placeholder="Road closure near Town Hall" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="affected-bus" class="form-label">Affected / broken-down bus (optional)</label>
+                        <select id="affected-bus" class="form-select">
+                            <option value="">None</option>
+                            <option th:each="bus : ${buses}" th:value="${bus.id}" th:attr="data-route-id=${bus.route != null ? bus.route.id : ''}" th:text="${bus.busNumber}">Bus</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="replacement-bus" class="form-label">Alternative bus (optional)</label>
+                        <select id="replacement-bus" class="form-select">
+                            <option value="">No replacement bus</option>
+                            <option th:each="bus : ${buses}" th:value="${bus.id}" th:text="${bus.busNumber}">Bus</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label fw-semibold">Detour route stops and coordinates</label>
+                    <div id="change-stops" class="vstack gap-2"></div>
+                    <button id="add-change-stop" type="button" class="btn btn-sm btn-outline-light mt-2">
+                        <i class="bi bi-plus-circle"></i> Add detour stop
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-warning fw-bold"><i class="bi bi-broadcast"></i> Publish one-day update</button>
+                    <button id="cancel-route-change" type="button" class="btn btn-outline-light d-none">End update and restore route</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <div th:each="route : ${routes}" class="route-option d-none" th:attr="data-route-id=${route.id},data-route-name=${route.name}"></div>
+    <div class="modal fade" id="edit-bus-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark text-white">
+                <form id="edit-bus-form">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title">Edit bus and driver details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input id="edit-bus-id" type="hidden">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label" for="edit-bus-number">Bus number</label><input id="edit-bus-number" class="form-control" maxlength="30" required></div>
+                            <div class="col-md-6"><label class="form-label" for="edit-registration">Registration</label><input id="edit-registration" class="form-control" pattern="TN[- ]?[0-9]{1,2}[- ]?[A-Za-z]{1,3}[- ]?[0-9]{1,4}" required></div>
+                            <div class="col-md-6"><label class="form-label" for="edit-route">Assigned route</label><select id="edit-route" class="form-select" required><option th:each="route : ${routes}" th:value="${route.id}" th:text="${route.name}">Route</option></select></div>
+                            <div class="col-md-6"><label class="form-label" for="edit-seats">Seat capacity</label><input id="edit-seats" type="number" class="form-control" min="1" max="200" required></div>
+                            <div class="col-md-4"><label class="form-label" for="edit-driver-name">Driver full name</label><input id="edit-driver-name" class="form-control" maxlength="100" required></div>
+                            <div class="col-md-4"><label class="form-label" for="edit-driver-phone">Driver phone</label><input id="edit-driver-phone" class="form-control" pattern="[+0-9() -]{8,20}" required></div>
+                            <div class="col-md-4"><label class="form-label" for="edit-license">Driving licence</label><input id="edit-license" class="form-control" maxlength="50" required></div>
+                        </div>
+                        <div id="edit-bus-message" class="alert d-none mt-3" role="status"></div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="save-bus-details" class="btn btn-info fw-bold">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/bcu-buses.js"></script>
+    <script src="/js/site-chatbot.js"></script>
+</body>
+</html>

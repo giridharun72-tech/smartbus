@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBus – Real-Time Public Bus Tracking, Reservation & Control System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="/"><i class="bi bi-house-door"></i> Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user/search"><i class="bi bi-search"></i> Search Buses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user/nearby"><i class="bi bi-geo-alt"></i> Buses Near Me</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/bcu/fleet-map"><i class="bi bi-map"></i> Live Fleet Map</a></li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="/login" class="btn btn-outline-light"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                    <a href="/register" class="btn btn-primary"><i class="bi bi-person-plus"></i> Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="py-5 bg-dark text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
+                        <i class="bi bi-broadcast"></i> NEXT-GEN PUBLIC TRANSPORTATION
+                    </span>
+                    <h1 class="display-4 fw-bold mb-3">Track. Travel. Reserve.<br><span class="text-primary">Stay Connected.</span></h1>
+                    <p class="lead text-light opacity-75 mb-4">
+                        Never guess where your bus is again. SmartBus brings real-time GPS tracking, smart arrival alerts, live seat reservations, and central control room reliability to your daily commute.
+                    </p>
+
+                    <!-- Quick Search Bar (Direct Database Query) -->
+                    <div class="card p-3 bg-white text-dark shadow-lg mb-4">
+                        <form action="/user/search" method="get" class="row g-2 align-items-center">
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1"><i class="bi bi-geo-alt"></i> From Location</label>
+                                <input type="text" name="from" class="form-control" placeholder="e.g. Gandhipuram" value="Gandhipuram">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1"><i class="bi bi-pin-map"></i> To Location</label>
+                                <input type="text" name="to" class="form-control" placeholder="e.g. Ukkadam" value="Ukkadam">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1"><i class="bi bi-clock"></i> Time (From onward)</label>
+                                <input type="time" name="time" class="form-control" value="11:10">
+                            </div>
+                            <div class="col-md-3 d-grid">
+                                <label class="form-label small text-muted mb-1">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-search"></i> Search Buses</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Role Portals Buttons -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/login" class="btn btn-sm btn-outline-light"><i class="bi bi-person"></i> Passenger Login</a>
+                        <a href="/login" class="btn btn-sm btn-outline-warning"><i class="bi bi-shield-lock"></i> Admin Portal</a>
+                        <a href="/login" class="btn btn-sm btn-outline-info"><i class="bi bi-cpu"></i> BCU Control Center</a>
+                        <a href="/login" class="btn btn-sm btn-outline-success"><i class="bi bi-steering-wheel"></i> Driver / Conductor</a>
+                        <a href="/guest/search" class="btn btn-sm btn-secondary"><i class="bi bi-eye"></i> Continue as Guest</a>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 mt-4 mt-lg-0">
+                    <div class="card bg-secondary text-white border-0 shadow-lg p-4" style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-activity text-success"></i> Live System Status</h5>
+                        <div class="row g-3 text-center">
+                            <div class="col-6">
+                                <div class="bg-dark p-3 rounded-3 border border-secondary">
+                                    <h3 class="text-primary fw-bold mb-0" th:text="${totalBuses}">10</h3>
+                                    <small class="text-muted">Total Fleet Buses</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-3 rounded-3 border border-secondary">
+                                    <h3 class="text-success fw-bold mb-0" th:text="${runningBuses}">8</h3>
+                                    <small class="text-muted">Buses Running Live</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-3 rounded-3 border border-secondary">
+                                    <h3 class="text-warning fw-bold mb-0" th:text="${totalRoutes}">4</h3>
+                                    <small class="text-muted">Active Routes</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-dark p-3 rounded-3 border border-secondary">
+                                    <h3 class="text-info fw-bold mb-0" th:text="${totalStops}">14</h3>
+                                    <small class="text-muted">Monitored Stops</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-dark rounded border border-secondary small">
+                            <i class="bi bi-info-circle text-primary"></i> <strong>Centralized BCU Active:</strong> GPS heartbeat monitor is scanning buses every 5s. In case of signal loss, manual fallback mode ensures passengers never lose bus visibility.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem & Solution Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center max-w-700 mx-auto mb-5">
+                <span class="text-primary fw-bold text-uppercase small">Solving Real Commuter Challenges</span>
+                <h2 class="fw-bold mt-1">The Public Transit Dilemma & The SmartBus Solution</h2>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100 p-4 border-danger border-start border-4">
+                        <h4 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle"></i> The Common Problems</h4>
+                        <ul class="list-unstyled mt-3 text-secondary">
+                            <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Passengers stand at stops not knowing if their bus has already passed or is running late.</li>
+                            <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Unannounced cancellations and breakdowns leave commuters stranded.</li>
+                            <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Uncertainty about seat availability leading to overcrowded buses.</li>
+                            <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Lost GPS signal renders ordinary tracking apps completely useless.</li>
+                            <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Passengers who forget their phones have no easy way to prove ticket validity.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 p-4 border-success border-start border-4">
+                        <h4 class="fw-bold text-success"><i class="bi bi-check-circle"></i> The SmartBus Solution</h4>
+                        <ul class="list-unstyled mt-3 text-secondary">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Real-time GPS Tracking:</strong> Live Leaflet maps showing exact coordinates, speed, and ETA.</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Chronological Time Search:</strong> Searching 11:10 AM shows 11:10, 11:15, 11:30 and later buses.</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Smart Proximity Alerts:</strong> Push notification when your bus is 500m, 1km, or 2km from your stop.</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> <strong>BCU Manual Location Fallback:</strong> If GPS drops, BCU authorizes driver manual entry so tracking stays alive.</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> <strong>Universal Verification:</strong> Conductor and BCU can verify tickets via QR code, Ticket #, or Passenger ID.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Grid -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Comprehensive Transport Ecosystem</h2>
+                <p class="text-muted">Built with full-stack Java Spring Boot, MySQL, Leaflet.js, and WebSockets.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card p-4 h-100">
+                        <div class="fs-1 text-primary mb-3"><i class="bi bi-compass"></i></div>
+                        <h5 class="fw-bold">Buses Near Me</h5>
+                        <p class="text-muted">Instantly detects your location and shows nearby bus stops, walking time estimates, and all approaching buses.</p>
+                        <a href="/user/nearby" class="btn btn-sm btn-outline-primary mt-auto">Find Nearby Stops</a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-4 h-100">
+                        <div class="fs-1 text-success mb-3"><i class="bi bi-grid-3x3-gap"></i></div>
+                        <h5 class="fw-bold">Visual Seat Reservation</h5>
+                        <p class="text-muted">Choose your exact preferred seat with interactive visual seat mapping. Database locks prevent duplicate bookings.</p>
+                        <a href="/user/search" class="btn btn-sm btn-outline-success mt-auto">Book Tickets</a>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card p-4 h-100">
+                        <div class="fs-1 text-danger mb-3"><i class="bi bi-shield-exclamation"></i></div>
+                        <h5 class="fw-bold">BCU Bus Control Center</h5>
+                        <p class="text-muted">Centralized operations monitoring fleet health, detecting GPS signal timeouts, and coordinating emergency interventions.</p>
+                        <a href="/bcu/fleet-map" class="btn btn-sm btn-outline-danger mt-auto">Open BCU Fleet Map</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-white text-center mt-auto border-top border-secondary">
+        <div class="container">
+            <p class="mb-1 fw-bold">SmartBus Public Transportation Platform &copy; 2026</p>
+            <p class="small text-muted mb-0">Built with Java 25, Spring Boot, MySQL, WebSocket STOMP, OpenPDF, and Leaflet.js</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

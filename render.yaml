@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: smartbus
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /guest/search
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SMARTBUS_COOKIE_SECURE
+        value: "true"

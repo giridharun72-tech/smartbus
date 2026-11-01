@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Signal Monitoring – BCU SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-white">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow border-bottom border-secondary">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/bcu/dashboard">
+                <i class="bi bi-cpu-fill fs-4 text-info"></i>
+                <span class="fs-4 fw-bold">BCU Signal Monitor</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/bcu/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link active" href="#"><i class="bi bi-broadcast-pin"></i> Signal Monitoring</a>
+                <a class="nav-link text-success" href="/bcu/simulation"><i class="bi bi-play-circle"></i> Simulation Controls</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        <div class="card bg-black border border-secondary p-4 mb-4 shadow">
+            <h4 class="fw-bold text-warning mb-1"><i class="bi bi-wifi-off"></i> Signal Loss & Manual Fallback Monitor</h4>
+            <p class="text-light opacity-75 small mb-0">
+                The backend heartbeat scheduler scans buses every 5 seconds. If a bus drops transmission for &gt;30s, it is flagged as <code>GPS_SIGNAL_LOST</code>. BCU staff can immediately authorize <b>Manual Location Mode</b>.
+            </p>
+        </div>
+
+        <div class="card bg-secondary text-white p-3 border-0">
+            <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill text-danger"></i> Heartbeat Telemetry Table</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Bus Number</th>
+                            <th>Status</th>
+                            <th>Last Known Location</th>
+                            <th>Last GPS Update</th>
+                            <th>Driver Contact</th>
+                            <th>Manual Location Permission</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="b : ${buses}">
+                            <td><strong class="text-info fs-6" th:text="'Bus ' + ${b.busNumber}">Bus 21A</strong></td>
+                            <td><span th:class="'status-badge status-' + ${b.status}" th:text="${b.status}">RUNNING</span></td>
+                            <td th:text="${b.nextStopName != null ? b.nextStopName : 'En route'}">Central Market</td>
+                            <td th:text="${b.lastGpsUpdate != null ? b.lastGpsUpdate : 'Active'}">11:24:30 AM</td>
+                            <td>
+                                <span th:text="${b.driver != null ? b.driver.fullName : 'Assigned Driver'}">Murugan K</span><br>
+                                <a th:if="${b.driver != null}" th:href="'tel:' + ${b.driver.phone}" class="btn btn-sm btn-outline-light py-0 mt-1"><i class="bi bi-telephone"></i> <span th:text="${b.driver.phone}">+91 94431 22334</span></a>
+                            </td>
+                            <td>
+                                <span th:if="${b.manualLocationAllowed}" class="badge bg-info text-dark">AUTHORIZED</span>
+                                <span th:unless="${b.manualLocationAllowed}" class="badge bg-secondary">DISABLED</span>
+                            </td>
+                            <td>
+                                <button th:if="${!b.manualLocationAllowed}" class="btn btn-sm btn-warning text-dark fw-bold" th:onclick="'toggleManual(' + ${b.id} + ', true)'">
+                                    <i class="bi bi-hand-index-thumb"></i> Authorize Manual
+                                </button>
+                                <button th:if="${b.manualLocationAllowed}" class="btn btn-sm btn-outline-danger" th:onclick="'toggleManual(' + ${b.id} + ', false)'">
+                                    <i class="bi bi-x-circle"></i> Revoke
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        function toggleManual(busId, enable) {
+            const url = enable ? `/api/bcu/manual-location/enable?busId=${busId}` : `/api/bcu/manual-location/disable?busId=${busId}`;
+            fetch(url, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    showToast(d.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                });
+        }
+    </script>
+</body>
+</html>

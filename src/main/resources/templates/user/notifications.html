@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Center – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/user/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link active" href="#"><i class="bi bi-bell"></i> Notification Center</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Active Subscriptions & Proximity Settings -->
+            <div class="col-lg-5">
+                <div class="card p-4 shadow-sm border-0 mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-broadcast text-primary"></i> Smart Proximity Alert</h5>
+                    <p class="text-muted small">Receive automatic notifications when your bus approaches your stop within your chosen distance threshold.</p>
+
+                    <form id="subForm" onsubmit="subscribeBus(event)">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Bus to Track</label>
+                            <select id="sub-bus" class="form-select" required>
+                                <option th:each="b : ${buses}" th:value="${b.id}" th:text="'Bus ' + ${b.busNumber} + ' (' + (${b.route != null ? b.route.name : 'Local'}) + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Target Bus Stop</label>
+                            <select id="sub-stop" class="form-select" required>
+                                <option th:each="s : ${stops}" th:value="${s.name}" th:text="${s.name}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Notification Distance</label>
+                            <select id="sub-dist" class="form-select">
+                                <option value="500">500 meters</option>
+                                <option value="1000" selected>1 km (Recommended)</option>
+                                <option value="2000">2 km</option>
+                                <option value="5000">5 km</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary fw-bold w-100"><i class="bi bi-bell-plus"></i> Activate Proximity Subscription</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notification Messages Feed -->
+            <div class="col-lg-7">
+                <div class="card p-4 shadow-sm border-0">
+                    <h5 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-inbox text-primary"></i> Live Alert Feed</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadNotifications()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                    </h5>
+
+                    <div id="notifications-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadNotifications);
+
+        function loadNotifications() {
+            const listEl = document.getElementById('notifications-list');
+            listEl.innerHTML = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Fetching alerts...</div>';
+
+            fetch('/api/notifications')
+                .then(r => r.json())
+                .then(notifications => {
+                    if (notifications.length === 0) {
+                        listEl.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-bell-slash fs-1 d-block mb-2"></i>No active notifications right now.</div>';
+                        return;
+                    }
+
+                    listEl.innerHTML = '';
+                    notifications.forEach(n => {
+                        const div = document.createElement('div');
+                        const isCancel = n.type === 'CANCELLATION';
+                        const isProximity = n.type === 'PROXIMITY_ALERT';
+                        div.className = `alert ${isCancel ? 'alert-danger' : isProximity ? 'alert-info' : 'alert-warning'} mb-3 shadow-sm`;
+                        const header = document.createElement('div');
+                        header.className = 'd-flex justify-content-between align-items-center mb-1';
+                        const title = document.createElement('strong');
+                        title.className = 'fs-6';
+                        title.textContent = String(n.title || '');
+                        const bus = document.createElement('span');
+                        bus.className = `badge ${isCancel ? 'bg-danger' : 'bg-primary'}`;
+                        bus.textContent = n.busNumber ? `Bus ${n.busNumber}` : 'SYSTEM';
+                        header.append(title, bus);
+
+                        const message = document.createElement('p');
+                        message.className = 'mb-1 small';
+                        message.textContent = String(n.message || '');
+                        const createdAt = new Date(n.createdAt);
+                        const timestamp = document.createElement('small');
+                        timestamp.className = 'text-muted d-block';
+                        timestamp.textContent = `${createdAt.toLocaleTimeString()} - ${createdAt.toLocaleDateString()}`;
+                        div.append(header, message, timestamp);
+                        listEl.appendChild(div);
+                    });
+                })
+                .catch(() => {
+                    listEl.innerHTML = '<div class="text-danger text-center py-3">Failed to load alerts.</div>';
+                });
+        }
+
+        function subscribeBus(e) {
+            e.preventDefault();
+            const busId = document.getElementById('sub-bus').value;
+            const stop = document.getElementById('sub-stop').value;
+            const dist = document.getElementById('sub-dist').value;
+
+            fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    busId: busId,
+                    alertType: 'PROXIMITY',
+                    distanceMeters: dist,
+                    targetStop: stop
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showToast(data.message || 'Subscribed successfully!', 'success');
+                loadNotifications();
+            })
+            .catch(() => showToast('Subscription failed. Please check login status.', 'error'));
+        }
+    </script>
+</body>
+</html>

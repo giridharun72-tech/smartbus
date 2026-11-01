@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserve Bus Seats – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/user/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link" href="/user/search"><i class="bi bi-search"></i> Search</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Left: Visual Seat Selection -->
+            <div class="col-lg-7">
+                <div class="card p-4 shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="fw-bold mb-0">Select Preferred Seat(s)</h4>
+                            <span class="text-muted small">Bus <strong th:text="${bus.busNumber}">21A</strong> (<span th:text="${bus.busType}">STANDARD</span>)</span>
+                        </div>
+                        <!-- Legend -->
+                        <div class="d-flex gap-2 small">
+                            <span class="d-inline-flex align-items-center gap-1"><span class="badge border border-success bg-white text-success">&nbsp;</span> Available</span>
+                            <span class="d-inline-flex align-items-center gap-1"><span class="badge bg-primary">&nbsp;</span> Selected</span>
+                            <span class="d-inline-flex align-items-center gap-1"><span class="badge bg-secondary">&nbsp;</span> Booked</span>
+                        </div>
+                    </div>
+
+                    <!-- Bus Cabin Layout -->
+                    <div class="bus-cabin">
+                        <div class="cabin-front">
+                            <span><i class="bi bi-door-open"></i> Front Door</span>
+                            <span><i class="bi bi-circle-fill text-dark"></i> Driver Cabin <i class="bi bi-arrow-up"></i></span>
+                        </div>
+
+                        <div id="seat-grid">
+                            <!-- Populated via seat-selection.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Booking Summary & Payment Flow -->
+            <div class="col-lg-5">
+                <div class="card p-4 shadow-sm border-0 sticky-top" style="top: 80px;">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-receipt text-primary"></i> Reservation Summary</h5>
+
+                    <table class="table table-borderless small mb-3">
+                        <tr>
+                            <td class="text-muted">Bus Number:</td>
+                            <td class="fw-bold text-end">Bus <span th:text="${bus.busNumber}">21A</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Route:</td>
+                            <td class="fw-bold text-end" th:text="${bus.route != null ? bus.route.name : 'Route 5'}">Route 5</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Boarding Stop:</td>
+                            <td class="fw-bold text-end" th:text="${fromStop}">Gandhipuram</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Destination:</td>
+                            <td class="fw-bold text-end" th:text="${toStop}">Ukkadam</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Travel Date:</td>
+                            <td class="fw-bold text-end" th:text="${today}">2026-09-01</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="text-muted pt-2">Selected Seat(s):</td>
+                            <td class="fw-bold text-end pt-2 text-primary" id="selected-seats-list">None selected</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Number of Seats:</td>
+                            <td class="fw-bold text-end" id="selected-count">0</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="fs-6 fw-bold pt-2">Total Amount Payable:</td>
+                            <td class="fs-5 fw-bold text-end text-success pt-2" id="total-fare">Rs. 0.00</td>
+                        </tr>
+                    </table>
+
+                    <div class="d-grid gap-2">
+                        <button id="btn-confirm-booking" class="btn btn-primary btn-lg fw-bold" disabled onclick="openPaymentModal()">
+                            <i class="bi bi-credit-card"></i> Proceed to Pay & Reserve
+                        </button>
+                    </div>
+
+                    <div class="mt-3 p-2 bg-light rounded text-muted small text-center">
+                        <i class="bi bi-shield-check text-success"></i> Transaction protected by database seat reservation locking.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sandbox Payment Gateway Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-lock-fill"></i> SmartBus Sandbox Payment Gateway</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <span class="text-muted small">Total Fare Due</span>
+                        <h2 class="fw-bold text-success mb-0" id="modal-pay-amount">Rs. 25.00</h2>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Mode</label>
+                        <select id="pay-mode" class="form-select">
+                            <option value="UPI_GPAY">UPI - Google Pay / PhonePe (Fast)</option>
+                            <option value="MOCK_CARD">Credit / Debit Card (Sandbox)</option>
+                            <option value="NET_BANKING">Net Banking (Sandbox)</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle"></i> This is a secure development mock gateway. Clicking "Confirm & Pay" will immediately issue your digital ticket and generate your downloadable PDF ticket with QR code.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-pay-submit" class="btn btn-success fw-bold px-4" onclick="completePayment()">Confirm & Pay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/seat-selection.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const busId = /*[[${bus.id}]]*/ 1;
+        const capacity = /*[[${bus.capacity}]]*/ 40;
+        const fromStop = /*[[${fromStop}]]*/ 'Gandhipuram';
+        const toStop = /*[[${toStop}]]*/ 'Ukkadam';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSeatSelection(busId, capacity);
+        });
+
+        function openPaymentModal() {
+            document.getElementById('modal-pay-amount').innerText = document.getElementById('total-fare').innerText;
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+
+        function completePayment() {
+            const btn = document.getElementById('btn-pay-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Issuing Ticket...';
+
+            const payload = {
+                busId: busId,
+                routeId: 1,
+                fromStop: fromStop,
+                toStop: toStop,
+                travelDate: new Date().toISOString().split('T')[0],
+                seatNumbers: Array.from(selectedSeats)
+            };
+
+            fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `/user/ticket/${data.ticketNumber}`;
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = 'Confirm & Pay';
+                    showToast(data.error || 'Booking error', 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = 'Confirm & Pay';
+                showToast('Server error. Please ensure you are logged in.', 'error');
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

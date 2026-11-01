@@ -1,0 +1,251 @@
+﻿:root {
+    --primary-color: #0d6efd;
+    --primary-dark: #0a58ca;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --dark-bg: #1e293b;
+    --card-bg: #ffffff;
+    --body-bg: #f8fafc;
+    --text-main: #162949;
+    --text-muted: #205cb0;
+    --border-color: #e2e8f0;
+}
+
+body {
+    background-color: var(--body-bg);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+.navbar-brand i {
+    color: #ffc107;
+}
+
+/* Cards & Dashboards */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.stat-card {
+    border-left: 4px solid var(--primary-color);
+}
+.stat-card.success { border-left-color: var(--success-color); }
+.stat-card.warning { border-left-color: var(--warning-color); }
+.stat-card.danger { border-left-color: var(--danger-color); }
+.stat-card.info { border-left-color: var(--info-color); }
+
+/* Status Badges */
+.status-badge {
+    padding: 0.35rem 0.65rem;
+    font-weight: 600;
+    border-radius: 50rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.status-RUNNING { background-color: #d1e7dd; color: #0f5132; }
+.status-DELAYED { background-color: #fff3cd; color: #664d03; }
+.status-CANCELLED { background-color: #f8d7da; color: #842029; }
+.status-GPS_SIGNAL_LOST { background-color: #ffe5d0; color: #b24100; border: 1px dashed #d9531e; }
+.status-MANUAL_LOCATION_MODE { background-color: #cff4fc; color: #055160; }
+.status-BREAKDOWN { background-color: #f8d7da; color: #842029; }
+.status-EMERGENCY { background-color: #dc3545; color: #ffffff; animation: pulse 1.5s infinite; }
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Source Indicator Badges */
+.source-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+.source-GPS { background-color: #198754; color: #fff; }
+.source-PHONE_GPS { background-color: #0d6efd; color: #fff; }
+.source-MANUAL { background-color: #0dcaf0; color: #055160; }
+.source-LAST_KNOWN { background-color: #fd7e14; color: #fff; }
+
+/* Map Containers */
+#map, #fleet-map {
+    width: 100%;
+    height: 520px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+}
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+.smartbus-chatbot { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1090; font-family: inherit; }
+.smartbus-chat-toggle { display: inline-flex; align-items: center; gap: .55rem; border: 0; border-radius: 999px; padding: .8rem 1.1rem; color: #fff; background: linear-gradient(135deg, #0d6efd, #0756c9); box-shadow: 0 8px 26px rgba(13, 110, 253, .3); font-weight: 700; }
+.smartbus-chat-toggle:hover { color: #fff; filter: brightness(1.05); transform: translateY(-1px); }
+.smartbus-chat-toggle img { width: 32px; height: 32px; border: 1px solid rgba(255,255,255,.7); border-radius: 10px; background: #fff; object-fit: cover; }
+.smartbus-chat-panel { position: absolute; right: 0; bottom: 4.1rem; display: flex; flex-direction: column; width: min(390px, calc(100vw - 2rem)); height: min(600px, calc(100vh - 7rem)); overflow: hidden; border: 1px solid #dce5f1; border-radius: 16px; background: #fff; box-shadow: 0 16px 48px rgba(15, 35, 65, .24); }
+.smartbus-chat-panel[hidden] { display: none; }
+.smartbus-chat-header { display: flex; align-items: center; gap: .7rem; padding: .9rem 1rem; color: #fff; background: linear-gradient(120deg, #0d6efd, #1252a2); }
+.smartbus-chat-avatar { display: block; width: 38px; height: 38px; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.7); border-radius: 11px; background: #fff; object-fit: cover; }
+.smartbus-chat-heading { display: flex; flex: 1; flex-direction: column; line-height: 1.3; }
+.smartbus-chat-heading small { color: rgba(255,255,255,.82); font-size: .75rem; }
+.smartbus-chat-close { border: 0; color: #fff; background: transparent; font-size: 1.05rem; }
+.smartbus-chat-privacy { margin: 0; padding: .45rem .8rem; color: #34445c; background: #eef4fc; font-size: .72rem; line-height: 1.35; }
+.smartbus-chat-feed { display: flex; flex: 1; flex-direction: column; gap: .65rem; overflow-y: auto; padding: .9rem; background: #f7f9fc; }
+.smartbus-chat-bubble { max-width: 90%; padding: .65rem .8rem; border-radius: 13px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
+.smartbus-chat-bubble.bot { align-self: flex-start; border: 1px solid #e6ebf2; border-bottom-left-radius: 4px; background: #fff; color: #243248; }
+.smartbus-chat-bubble.user { align-self: flex-end; border-bottom-right-radius: 4px; background: #0d6efd; color: #fff; }
+.smartbus-chat-sources { display: flex; flex-direction: column; gap: .25rem; margin-top: .55rem; padding-top: .45rem; border-top: 1px solid #e6ebf2; font-size: .78rem; }
+.smartbus-chat-sources a { color: #0756c9; overflow-wrap: anywhere; }
+.smartbus-chat-prompts { display: flex; flex-wrap: wrap; gap: .4rem; }
+.smartbus-chat-prompts button { border: 1px solid #b7ccef; border-radius: 999px; padding: .35rem .6rem; color: #0a58ca; background: #fff; font-size: .77rem; }
+.smartbus-chat-trip { padding: .7rem; border: 1px solid #dce5f1; border-radius: 11px; background: #fff; font-size: .83rem; }
+.smartbus-chat-trip p { margin: .35rem 0; color: #667085; }
+.smartbus-chat-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
+.smartbus-chat-action { border-radius: 6px; padding: .35rem .55rem; text-decoration: none; font-size: .78rem; }
+.smartbus-chat-action.outline { border: 1px solid #0d6efd; color: #0d6efd; }
+.smartbus-chat-action.primary { color: #fff; background: #0d6efd; }
+.smartbus-chat-error { margin: 0 .8rem; color: #842029; font-size: .82rem; }
+.smartbus-chat-error[hidden] { display: none; }
+.smartbus-chat-form { display: flex; gap: .5rem; padding: .65rem .8rem; border-top: 1px solid #e6ebf2; }
+.smartbus-chat-form input { flex: 1; min-width: 0; border: 1px solid #ced7e3; border-radius: 9px; padding: .65rem .7rem; outline-color: #0d6efd; }
+.smartbus-chat-form button { width: 42px; border: 0; border-radius: 9px; color: #fff; background: #0d6efd; }
+.smartbus-chat-footer { display: flex; justify-content: space-between; gap: .4rem; padding: 0 .85rem .65rem; }
+.smartbus-chat-footer a, .smartbus-chat-footer button { border: 0; padding: 0; color: #52657e; background: transparent; text-decoration: none; font-size: .76rem; }
+@media (max-width: 480px) { .smartbus-chatbot { right: .75rem; bottom: .75rem; } .smartbus-chat-panel { right: -.25rem; width: calc(100vw - 1rem); height: min(600px, calc(100vh - 5.5rem)); } }
+
+/* Visual Seat Selection */
+.bus-cabin {
+    background-color: #f1f5f9;
+    border: 2px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 380px;
+    margin: 0 auto;
+    position: relative;
+}
+.cabin-front {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px dashed #94a3b8;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.seat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.seat-pair {
+    display: flex;
+    gap: 8px;
+}
+.seat-aisle {
+    width: 30px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+.seat {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.seat.available {
+    background-color: #ffffff;
+    border: 2px solid #22c55e;
+    color: #15803d;
+}
+.seat.available:hover {
+    background-color: #dcfce7;
+    transform: translateY(-2px);
+}
+.seat.selected {
+    background-color: #0d6efd;
+    border: 2px solid #0a58ca;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.4);
+}
+.seat.booked {
+    background-color: #e2e8f0;
+    border: 2px solid #94a3b8;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* Driver UI High Contrast Buttons */
+.driver-btn {
+    padding: 1.2rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Digital Ticket Styles */
+.digital-ticket {
+    background: #fff;
+    border: 2px dashed #0d6efd;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.ticket-header {
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.qr-container {
+    text-align: center;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    background-color: #0f172a;
+    color: #94a3b8;
+}

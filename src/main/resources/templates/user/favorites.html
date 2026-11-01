@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Favorites – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/user/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link active" href="#"><i class="bi bi-star"></i> Favorites</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Favorite Buses -->
+            <div class="col-md-6">
+                <div class="card p-4 shadow-sm border-0 h-100">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-star-fill text-warning"></i> Saved Favorite Buses</h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0">Bus 21A</h6>
+                                <small class="text-muted">Route 5 (Gandhipuram - Ukkadam)</small>
+                            </div>
+                            <div>
+                                <span class="status-badge status-RUNNING me-2">RUNNING</span>
+                                <a href="/user/tracking/1" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i> Track</a>
+                            </div>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0">Bus 17C</h6>
+                                <small class="text-muted">Route 12 (Airport - Gandhipuram)</small>
+                            </div>
+                            <div>
+                                <span class="status-badge status-RUNNING me-2">RUNNING</span>
+                                <a href="/user/tracking/3" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i> Track</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Favorite Stops -->
+            <div class="col-md-6">
+                <div class="card p-4 shadow-sm border-0 h-100">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger"></i> Saved Favorite Stops</h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary me-2">HOME</span>
+                                <strong>Gandhipuram Bus Stand</strong><br>
+                                <small class="text-muted">Central Terminal</small>
+                            </div>
+                            <a href="/user/search?from=Gandhipuram" class="btn btn-sm btn-outline-primary">View Buses</a>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info text-dark me-2">OFFICE</span>
+                                <strong>CHIL SEZ Tech Park</strong><br>
+                                <small class="text-muted">Saravanampatti IT Corridor</small>
+                            </div>
+                            <a href="/user/search?to=CHIL+SEZ+Tech+Park" class="btn btn-sm btn-outline-primary">View Buses</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

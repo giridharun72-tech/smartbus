@@ -1,0 +1,29 @@
+﻿{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "SmartBus - Launch Application",
+            "request": "launch",
+            "mainClass": "com.smartbus.SmartBusApplication",
+            "projectName": "smartbus",
+            "args": "",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "dev",
+                "OLLAMA_API_KEY": "${env:OLLAMA_API_KEY}"
+            }
+        },
+        {
+            "type": "java",
+            "name": "SmartBus - Launch with MySQL Profile",
+            "request": "launch",
+            "mainClass": "com.smartbus.SmartBusApplication",
+            "projectName": "smartbus",
+            "args": "",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "mysql",
+                "OLLAMA_API_KEY": "${env:OLLAMA_API_KEY}"
+            }
+        }
+    ]
+}

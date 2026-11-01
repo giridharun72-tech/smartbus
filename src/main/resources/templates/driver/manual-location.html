@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Location Entry – Driver SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-dark text-white">
+    <nav class="navbar navbar-dark bg-black shadow-sm py-3 border-bottom border-secondary">
+        <div class="container-fluid px-3">
+            <a href="/driver/dashboard" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left"></i> Console</a>
+            <h5 class="fw-bold mb-0 text-info">Manual Location Submission</h5>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- If Not Authorized by BCU -->
+        <div th:if="${bus != null && !bus.manualLocationAllowed}" class="card bg-black border border-danger p-4 text-center shadow-lg">
+            <div class="text-danger fs-1 mb-2"><i class="bi bi-lock-fill"></i></div>
+            <h4 class="fw-bold text-danger">Manual Location Mode Locked</h4>
+            <p class="text-light opacity-75">
+                Manual location mode has <b>NOT</b> been authorized by the Central Bus Control Unit (BCU).
+                In normal operation, GPS updates are sent automatically. If GPS is failing, contact BCU to enable Manual Mode.
+            </p>
+            <div class="mt-3">
+                <a href="tel:0422230000" class="btn btn-outline-warning"><i class="bi bi-telephone"></i> Call BCU Control Room</a>
+                <a href="/bcu/signal-monitor" class="btn btn-sm btn-outline-info ms-2">Open BCU Monitor (Demo)</a>
+            </div>
+        </div>
+
+        <!-- If Authorized by BCU -->
+        <div th:if="${bus != null && bus.manualLocationAllowed}" class="card bg-secondary text-white p-4 border-0 shadow-lg">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="badge bg-info text-dark fs-6 mb-1"><i class="bi bi-unlock-fill"></i> BCU AUTHORIZED</span>
+                    <h4 class="fw-bold text-white mb-0">GPS Lost Fallback – Submit Current Position</h4>
+                </div>
+            </div>
+            <p class="small text-light opacity-75 mb-4">
+                Select your current station or nearest landmark. Passenger tracking maps will immediately update with <b>"MANUAL LOCATION UPDATE"</b>.
+            </p>
+
+            <form onsubmit="submitManualLocation(event)">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Current Bus Stop / Waypoint</label>
+                    <select id="stop-select" class="form-select form-select-lg" onchange="onStopChange()">
+                        <option th:each="rs : ${stops}" 
+                                th:value="${rs.stop.name}" 
+                                th:data-lat="${rs.stop.latitude}" 
+                                th:data-lon="${rs.stop.longitude}" 
+                                th:text="${rs.stop.name} + ' (Stop #' + ${rs.stopOrder} + ')'">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small text-light">Latitude</label>
+                        <input type="text" id="manual-lat" class="form-control" value="11.0090" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-light">Longitude</label>
+                        <input type="text" id="manual-lon" class="form-control" value="76.9650" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Reason for Manual Update</label>
+                    <input type="text" id="manual-reason" class="form-control" value="GPS antenna signal dropped in tunnel area" required>
+                </div>
+
+                <button type="submit" id="btn-submit-manual" class="btn btn-info btn-lg text-dark fw-bold w-100 py-3">
+                    <i class="bi bi-send-fill"></i> Push Manual Location to Passengers
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const busId = /*[[${bus != null ? bus.id : 1}]]*/ 1;
+
+        function onStopChange() {
+            const select = document.getElementById('stop-select');
+            const selectedOpt = select.options[select.selectedIndex];
+            document.getElementById('manual-lat').value = selectedOpt.dataset.lat || '11.0090';
+            document.getElementById('manual-lon').value = selectedOpt.dataset.lon || '76.9650';
+        }
+
+        function submitManualLocation(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-manual');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            const payload = {
+                busId: busId,
+                latitude: parseFloat(document.getElementById('manual-lat').value),
+                longitude: parseFloat(document.getElementById('manual-lon').value),
+                landmark: document.getElementById('stop-select').value,
+                reason: document.getElementById('manual-reason').value
+            };
+
+            fetch('/api/driver/manual-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(d => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> Push Manual Location to Passengers';
+                if (d.success) {
+                    showToast('Manual location broadcasted to passenger maps!', 'success');
+                    setTimeout(() => location.href = '/driver/dashboard', 1500);
+                } else {
+                    showToast(d.error || 'Failed to update', 'error');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> Push Manual Location to Passengers';
+                showToast('Server error', 'error');
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

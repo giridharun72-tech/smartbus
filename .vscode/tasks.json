@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run SmartBus (Spring Boot)",
+            "type": "shell",
+            "command": "& 'C:\\Users\\Giridharun S\\.tools\\apache-maven-3.9.10\\bin\\mvn.cmd' spring-boot:run",
+            "options": {
+                "env": {
+                    "JAVA_HOME": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2",
+                    "PATH": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2\\bin;${env:PATH}",
+                    "OLLAMA_API_KEY": "${env:OLLAMA_API_KEY}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "& 'C:\\Users\\Giridharun S\\.tools\\apache-maven-3.9.10\\bin\\mvn.cmd' test",
+            "options": {
+                "env": {
+                    "JAVA_HOME": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2",
+                    "PATH": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2\\bin;${env:PATH}"
+                }
+            },
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Package Jar",
+            "type": "shell",
+            "command": "& 'C:\\Users\\Giridharun S\\.tools\\apache-maven-3.9.10\\bin\\mvn.cmd' clean package -DskipTests",
+            "options": {
+                "env": {
+                    "JAVA_HOME": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2",
+                    "PATH": "C:\\Users\\Giridharun S\\AppData\\Local\\jdks\\jdk-25.0.2\\bin;${env:PATH}"
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

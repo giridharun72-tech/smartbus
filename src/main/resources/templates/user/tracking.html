@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Bus Tracking – SmartBus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-bus-front-fill fs-4 text-warning"></i>
+                <span class="fs-4 fw-bold">SmartBus</span>
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/user/dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+                <a class="nav-link" href="/user/search"><i class="bi bi-search"></i> Search</a>
+                <a class="nav-link active" href="#"><i class="bi bi-geo-alt"></i> Live Tracking</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Live Header Info Bar -->
+        <div class="card p-3 shadow-sm border-0 mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-1 text-primary"><i class="bi bi-bus-front"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0">Bus <span th:text="${bus.busNumber}">21A</span></h3>
+                        <span class="text-muted small" th:text="${bus.route != null ? bus.route.name : 'Route 5'}">Route 5 (Gandhipuram - Ukkadam)</span>
+                    </div>
+                </div>
+                <div id="route-change-banner" class="alert alert-warning d-none" role="status" aria-live="polite"></div>
+
+                <!-- Status & Location Source Badges -->
+                <div class="d-flex align-items-center gap-2">
+                    <span id="live-status-badge" th:class="'status-badge status-' + ${bus.status}" th:text="${bus.status}">RUNNING</span>
+                    <span id="live-source-badge" th:class="'source-badge source-' + ${bus.locationSource}">
+                        <i class="bi bi-broadcast"></i> <span th:text="${bus.locationSource}">LIVE GPS</span>
+                    </span>
+                    <a th:href="@{'/user/booking/' + ${bus.id}}" class="btn btn-success fw-bold"><i class="bi bi-ticket-perforated"></i> Book This Bus</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Leaflet Live Map -->
+            <div class="col-lg-8">
+                <div class="card p-2 shadow-sm border-0">
+                    <div id="map" style="height: 560px;"></div>
+                </div>
+            </div>
+
+            <!-- Real-time Telemetry & Route Progress -->
+            <div class="col-lg-4">
+                <div class="card p-3 shadow-sm border-0 mb-3">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-speedometer2 text-primary"></i> Live Telemetry</h5>
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded">
+                                <span class="text-muted small d-block">Current Speed</span>
+                                <h4 class="fw-bold text-dark mb-0" id="live-speed" th:text="${bus.currentSpeed != null ? bus.currentSpeed + ' km/h' : '32 km/h'}">32 km/h</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded">
+                                <span class="text-muted small d-block">ETA to Next Stop</span>
+                                <h4 class="fw-bold text-success mb-0" id="live-eta" th:text="${bus.etaMinutes != null ? bus.etaMinutes + ' mins' : '7 mins'}">7 mins</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded">
+                                <span class="text-muted small d-block">Next Stop</span>
+                                <strong class="text-primary" id="live-next-stop" th:text="${bus.nextStopName != null ? bus.nextStopName : 'Central Market'}">Central Market</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light p-2 rounded">
+                                <span class="text-muted small d-block">Distance Remaining</span>
+                                <strong class="text-dark" id="live-distance" th:text="${bus.distanceToNextStopKm != null ? bus.distanceToNextStopKm + ' km' : '1.8 km'}">1.8 km</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-2 border-top small text-muted d-flex justify-content-between">
+                        <span>Last Update: <b id="live-updated-at">Just now</b></span>
+                        <span>Driver: <b th:text="${bus.driver != null ? bus.driver.fullName : 'Assigned Driver'}">Murugan K</b></span>
+                    </div>
+                </div>
+
+                <!-- Stops along the Route -->
+                <div class="card p-3 shadow-sm border-0">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-signpost-split text-secondary"></i> Route Stops</h6>
+                    <div style="max-height: 280px; overflow-y: auto;" class="small">
+                        <ul id="route-stop-list" class="list-group list-group-flush">
+                            <li th:each="rs : ${stops}" class="list-group-item d-flex justify-content-between align-items-center py-2 px-1">
+                                <div>
+                                    <span class="badge bg-secondary me-1" th:text="${rs.stopOrder}">1</span>
+                                    <span th:text="${rs.stop.name}">Gandhipuram</span>
+                                </div>
+                                <span class="badge bg-light text-dark" th:text="'Rs. ' + ${rs.fareFromStart}">Rs. 0.0</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/tracking.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const busId = /*[[${bus.id}]]*/ 1;
+        const routeId = /*[[${bus.route != null ? bus.route.id : 0}]]*/ 0;
+        const busNumber = /*[[${bus.busNumber}]]*/ '21A';
+        const initialLat = /*[[${bus.currentLatitude}]]*/ 11.0090;
+        const initialLon = /*[[${bus.currentLongitude}]]*/ 76.9650;
+        const stopsJson = /*[[${stops}]]*/ [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTrackingMap(busId, initialLat, initialLon, busNumber, stopsJson, routeId);
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

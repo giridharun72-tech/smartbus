@@ -1,0 +1,13 @@
+target/
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.env
+.env.*
+!.env.example
+*.log
+*.iml
+*.class
+*.jar
