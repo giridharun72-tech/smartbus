@@ -7,14 +7,6 @@ services:
     healthCheckPath: /guest/search
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: prod
+        value: demo
       - key: SMARTBUS_COOKIE_SECURE
         value: "true"
-      - key: SPRING_DATASOURCE_URL
-        sync: false
-      - key: SPRING_DATASOURCE_USERNAME
-        sync: false
-      - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
-      - key: SMARTBUS_AADHAAR_HMAC_KEY
-        sync: false

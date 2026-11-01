@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("dev")
+@Profile({"dev", "demo"})
 public class DevGpsHeartbeatService {
 
     private final BusRepository busRepository;

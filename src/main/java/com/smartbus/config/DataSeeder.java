@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@Profile("dev")
+@Profile({"dev", "demo"})
 public class DataSeeder implements CommandLineRunner {
 
     @Value("${SMARTBUS_DEMO_USER_PASSWORD:}")

@@ -55,17 +55,17 @@ SmartBus is a comprehensive, production-grade full-stack web application designe
 
 ---
 
-## 3. Deploy to Render
+## 3. Free Render Demo
 
-The repository includes `render.yaml` and a Dockerfile for Render Blueprint deployment. Before deploying:
+The repository includes `render.yaml` and a Dockerfile for deploying a sample-data demo on Render's free web-service tier:
 
-1. Create a reachable, persistent MySQL database with a database name, user, password, and TLS-enabled JDBC URL. The production profile requires `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD`; it does not fall back to the local development database.
-2. In Render, choose **New → Blueprint**, connect the private `giridharun72-tech/smartbus` GitHub repository, and deploy the `render.yaml` Blueprint.
-3. Enter the database values when Render requests the environment variables marked `sync: false`. Set `SMARTBUS_AADHAAR_HMAC_KEY` to a stable, randomly generated secret with at least 32 characters. Keep `SPRING_PROFILES_ACTIVE=prod` and `SMARTBUS_COOKIE_SECURE=true`.
-4. Wait for the Render health check to pass, then test the HTTPS URL. Phone browser GPS requires HTTPS.
-5. Production does not run the development seeder. Provision staff accounts securely and load the real bus/route data before opening the service to users.
+1. In Render, choose **New → Blueprint**, connect the private `giridharun72-tech/smartbus` GitHub repository, and deploy the `render.yaml` Blueprint.
+2. The Blueprint selects the `demo` profile, which uses embedded in-memory H2, seeded sample buses/routes, HTTPS cookies, and simulated demo GPS movement. No database credentials are required.
+3. Wait for the Render health check to pass, then open the HTTPS URL. Register a passenger account to try passenger features. The sample staff accounts have unpredictable passwords and are not intended for public sign-in.
 
-Never commit database passwords, API keys, or generated secrets. Set them in Render's environment-variable dashboard. The development profile and its sample data are for local testing only.
+**Demo limitations:** Render's free web service spins down after inactivity. Its filesystem is ephemeral, so the H2 database and registrations are lost when the service spins down, restarts, or redeploys. The free tier is for testing and hobby demos, not production. Do not enter real passenger, payment, driver, or operational GPS data. For a live production deployment, use persistent MySQL, securely provision staff accounts, and retain the `prod` profile.
+
+Never commit database passwords, API keys, or generated secrets.
 
 ## 4. Pre-configured Demo Accounts
 
