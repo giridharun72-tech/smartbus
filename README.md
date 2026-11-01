@@ -55,7 +55,19 @@ SmartBus is a comprehensive, production-grade full-stack web application designe
 
 ---
 
-## 3. Pre-configured Demo Accounts
+## 3. Deploy to Render
+
+The repository includes `render.yaml` and a Dockerfile for Render Blueprint deployment. Before deploying:
+
+1. Create a reachable, persistent MySQL database with a database name, user, password, and TLS-enabled JDBC URL. The production profile requires `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD`; it does not fall back to the local development database.
+2. In Render, choose **New → Blueprint**, connect the private `giridharun72-tech/smartbus` GitHub repository, and deploy the `render.yaml` Blueprint.
+3. Enter the database values when Render requests the environment variables marked `sync: false`. Set `SMARTBUS_AADHAAR_HMAC_KEY` to a stable, randomly generated secret with at least 32 characters. Keep `SPRING_PROFILES_ACTIVE=prod` and `SMARTBUS_COOKIE_SECURE=true`.
+4. Wait for the Render health check to pass, then test the HTTPS URL. Phone browser GPS requires HTTPS.
+5. Production does not run the development seeder. Provision staff accounts securely and load the real bus/route data before opening the service to users.
+
+Never commit database passwords, API keys, or generated secrets. Set them in Render's environment-variable dashboard. The development profile and its sample data are for local testing only.
+
+## 4. Pre-configured Demo Accounts
 
 The development seeder creates these usernames, but it does not use public default passwords. Set the environment variable for each role before the first development startup if you need to sign in as a seeded account:
 
@@ -70,7 +82,7 @@ Use unique passwords of at least 16 characters. If a password is not configured,
 
 ---
 
-## 4. How to Run in VS Code
+## 5. How to Run in VS Code
 
 ### Option A: Direct VS Code Run (Zero-Setup with Embedded Database)
 1. Open VS Code.
